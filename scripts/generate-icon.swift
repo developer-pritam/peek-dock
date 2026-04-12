@@ -110,14 +110,28 @@ func drawIcon(_ s: CGFloat) -> NSImage {
 
 func savePNG(_ image: NSImage, to path: String) throws {
     var rect = NSRect(origin: .zero, size: image.size)
-    guard let cg = image.cgImage(forProposedRect: &rect, context: nil, hints: nil) else {
+    guard let srcCG = image.cgImage(forProposedRect: &rect, context: nil, hints: nil) else {
         throw NSError(domain: "Icon", code: 1,
                       userInfo: [NSLocalizedDescriptionKey: "CGImage conversion failed"])
     }
-    let rep = NSBitmapImageRep(cgImage: cg)
-    rep.size = image.size
-    guard let data = rep.representation(using: .png, properties: [:]) else {
+
+    // Re-render into an explicit 8-bit RGBA context so the PNG is web-safe.
+    // NSBitmapImageRep(cgImage:) can produce 16-bit output which browsers refuse to render.
+    let w = srcCG.width, h = srcCG.height
+    guard let ctx8 = CGContext(
+        data: nil, width: w, height: h,
+        bitsPerComponent: 8, bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ), let cg = { ctx8.draw(srcCG, in: CGRect(x: 0, y: 0, width: w, height: h)); return ctx8.makeImage() }()
+    else {
         throw NSError(domain: "Icon", code: 2,
+                      userInfo: [NSLocalizedDescriptionKey: "8-bit re-render failed"])
+    }
+
+    let rep = NSBitmapImageRep(cgImage: cg)
+    guard let data = rep.representation(using: .png, properties: [:]) else {
+        throw NSError(domain: "Icon", code: 3,
                       userInfo: [NSLocalizedDescriptionKey: "PNG encoding failed"])
     }
     try data.write(to: URL(fileURLWithPath: path))

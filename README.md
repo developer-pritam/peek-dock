@@ -63,8 +63,8 @@ To uninstall: quit from the menu bar icon, then move `PeekDock.app` to Trash.
 brew install xcodegen
 
 # Clone and build
-git clone https://github.com/YOUR_USERNAME/peekdock.git
-cd peekdock
+git clone https://github.com/developer-pritam/peek-dock.git
+cd peek-dock
 xcodegen generate
 open PeekDock.xcodeproj
 ```
