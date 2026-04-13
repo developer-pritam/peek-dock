@@ -109,29 +109,32 @@ func drawIcon(_ s: CGFloat) -> NSImage {
 // MARK: - Save PNG
 
 func savePNG(_ image: NSImage, to path: String) throws {
-    var rect = NSRect(origin: .zero, size: image.size)
-    guard let srcCG = image.cgImage(forProposedRect: &rect, context: nil, hints: nil) else {
+    // Use explicit pixel dimensions from the image's logical size.
+    // NEVER use cgImage(forProposedRect:) — on Retina displays it doubles the
+    // pixel count, producing 32px files for 16pt images, which actool rejects.
+    let w = Int(image.size.width)
+    let h = Int(image.size.height)
+
+    guard let rep = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: w, pixelsHigh: h,
+        bitsPerSample: 8, samplesPerPixel: 4,
+        hasAlpha: true, isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: 0, bitsPerPixel: 0
+    ) else {
         throw NSError(domain: "Icon", code: 1,
-                      userInfo: [NSLocalizedDescriptionKey: "CGImage conversion failed"])
+                      userInfo: [NSLocalizedDescriptionKey: "NSBitmapImageRep init failed"])
     }
+    rep.size = NSSize(width: w, height: h)
 
-    // Re-render into an explicit 8-bit RGBA context so the PNG is web-safe.
-    // NSBitmapImageRep(cgImage:) can produce 16-bit output which browsers refuse to render.
-    let w = srcCG.width, h = srcCG.height
-    guard let ctx8 = CGContext(
-        data: nil, width: w, height: h,
-        bitsPerComponent: 8, bytesPerRow: 0,
-        space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-    ), let cg = { ctx8.draw(srcCG, in: CGRect(x: 0, y: 0, width: w, height: h)); return ctx8.makeImage() }()
-    else {
-        throw NSError(domain: "Icon", code: 2,
-                      userInfo: [NSLocalizedDescriptionKey: "8-bit re-render failed"])
-    }
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    image.draw(in: NSRect(x: 0, y: 0, width: w, height: h))
+    NSGraphicsContext.restoreGraphicsState()
 
-    let rep = NSBitmapImageRep(cgImage: cg)
     guard let data = rep.representation(using: .png, properties: [:]) else {
-        throw NSError(domain: "Icon", code: 3,
+        throw NSError(domain: "Icon", code: 2,
                       userInfo: [NSLocalizedDescriptionKey: "PNG encoding failed"])
     }
     try data.write(to: URL(fileURLWithPath: path))
