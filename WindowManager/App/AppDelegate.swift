@@ -15,6 +15,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusBar()
         setupPanelAndObserver()
         showWelcomeWindowIfNeeded()
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applyStatusBarVisibility),
+            name: .peekDockStatusBarVisibilityChanged,
+            object: nil
+        )
     }
 
     // MARK: - Permissions
@@ -36,6 +43,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Status Bar
 
+    @objc private func applyStatusBarVisibility() {
+        let hide = UserDefaults.standard.bool(forKey: "hideStatusBarIcon")
+        statusItem?.isVisible = !hide
+    }
+
     private func setupStatusBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         let button = statusItem?.button
@@ -43,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button?.image?.isTemplate = true
         button?.action = #selector(statusBarClicked)
         button?.target = self
+        applyStatusBarVisibility()
     }
 
     @objc private func statusBarClicked() {

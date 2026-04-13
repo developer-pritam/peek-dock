@@ -47,6 +47,28 @@ struct WindowInfo: Identifiable, Hashable {
 // MARK: - Window Actions
 
 extension WindowInfo {
+    /// Closes the window via its AX close button.
+    func close() {
+        var closeBtn: CFTypeRef?
+        AXUIElementCopyAttributeValue(axElement, "AXCloseButton" as CFString, &closeBtn)
+        if let btn = closeBtn {
+            AXUIElementPerformAction(btn as! AXUIElement, kAXPressAction as CFString)
+        }
+    }
+
+    /// Minimizes the window via AX.
+    func minimize() {
+        AXUIElementSetAttributeValue(axElement, kAXMinimizedAttribute as CFString, true as CFTypeRef)
+    }
+
+    /// Toggles fullscreen for the window via AX.
+    func toggleFullscreen() {
+        var val: CFTypeRef?
+        AXUIElementCopyAttributeValue(axElement, "AXFullScreen" as CFString, &val)
+        let current = (val as? Bool) ?? false
+        AXUIElementSetAttributeValue(axElement, "AXFullScreen" as CFString, (!current) as CFTypeRef)
+    }
+
     /// Brings this specific window to the front using SkyLight + AX APIs.
     func bringToFront() {
         let maxRetries = 3

@@ -1,5 +1,10 @@
 import SwiftUI
 import ApplicationServices
+import ServiceManagement
+
+extension Notification.Name {
+    static let peekDockStatusBarVisibilityChanged = Notification.Name("PeekDockStatusBarVisibilityChanged")
+}
 
 // ── Customise these before shipping ──────────────────────────────────────────
 private let kPortfolioURL = URL(string: "https://developerpritam.in")!
@@ -41,6 +46,8 @@ struct WelcomeView: View {
 
     @State private var accessibilityGranted = false
     @State private var screenRecordingGranted = false
+    @State private var launchAtLogin = (SMAppService.mainApp.status == .enabled)
+    @AppStorage("hideStatusBarIcon") private var hideStatusBarIcon = false
 
     // Re-check permissions every second so the UI auto-updates after the user
     // returns from System Settings without needing to click Refresh.
@@ -51,6 +58,8 @@ struct WelcomeView: View {
             headerSection
             Divider()
             permissionsSection
+            Divider()
+            preferencesSection
             Divider()
             howToUseSection
             Divider()
@@ -130,6 +139,56 @@ struct WelcomeView: View {
         .padding(.bottom, 4)
     }
 
+    // MARK: - Preferences
+
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionTitle("Preferences")
+
+            // Launch at Login
+            PreferenceRow(
+                icon: "arrow.circlepath",
+                iconColor: .green,
+                title: "Launch at Login",
+                description: "Automatically start PeekDock when you log in to your Mac."
+            ) {
+                Toggle("", isOn: $launchAtLogin)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .onChange(of: launchAtLogin) { enabled in
+                        do {
+                            if enabled {
+                                try SMAppService.mainApp.register()
+                            } else {
+                                try SMAppService.mainApp.unregister()
+                            }
+                        } catch {
+                            // Roll back the toggle if the system call failed
+                            launchAtLogin = (SMAppService.mainApp.status == .enabled)
+                        }
+                    }
+            }
+
+            Divider().padding(.leading, 54)
+
+            // Hide menu bar icon
+            PreferenceRow(
+                icon: "menubar.rectangle",
+                iconColor: .secondary,
+                title: "Hide menu bar icon",
+                description: "PeekDock still runs in the background. Reopen this window by relaunching the app."
+            ) {
+                Toggle("", isOn: $hideStatusBarIcon)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .onChange(of: hideStatusBarIcon) { _ in
+                        NotificationCenter.default.post(name: .peekDockStatusBarVisibilityChanged, object: nil)
+                    }
+            }
+            .padding(.bottom, 4)
+        }
+    }
+
     // MARK: - How to Use
 
     private var howToUseSection: some View {
@@ -199,6 +258,44 @@ struct WelcomeView: View {
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+}
+
+// MARK: - Preference Row
+
+private struct PreferenceRow<Control: View>: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let description: String
+    @ViewBuilder let control: () -> Control
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(iconColor.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(iconColor)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                Text(description)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            control()
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 12)
     }
 }
 
