@@ -28,8 +28,8 @@ targets:
         ENABLE_APP_SANDBOX: NO
         CODE_SIGN_ENTITLEMENTS: WindowManager/App/WindowManager.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.4"
+        CURRENT_PROJECT_VERSION: "4"
     entitlements:
       path: WindowManager/App/WindowManager.entitlements
       properties:
