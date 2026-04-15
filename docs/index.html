@@ -14,8 +14,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/icon.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="assets/apple-touch-icon.png" />
 
-  <!-- UPDATE THIS: replace with your actual GitHub releases URL -->
-  <!-- https://github.com/developer-pritam/peek-dock/releases/latest/download/PeekDock-1.0.zip -->
+  <!-- Download URL: /releases/latest/download/PeekDock.zip — always points to the newest release -->
 
   <style>
     /* ── Reset & base ──────────────────────────────────────────────────── */
@@ -378,46 +377,120 @@
       pointer-events: none;
     }
 
-    /* ── Features ───────────────────────────────────────────────────────── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-top: 48px;
+    /* ── Features (Bento) ───────────────────────────────────────────────── */
+    .features-bento {
+      margin-top: 52px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
+    .fb-row { display: flex; gap: 16px; }
 
-    .feature-card {
-      background: var(--surface);
+    .fb-card {
+      flex: 1;
+      border-radius: 20px;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      transition: border-color 0.2s;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     }
-    .feature-card:hover { border-color: rgba(255,255,255,0.16); }
+    .fb-lg { flex: 1.6; }
 
-    .feature-icon {
-      width: 44px; height: 44px;
-      border-radius: 11px;
+    .fb-card:hover { transform: translateY(-4px); }
+    .fc-blue:hover   { box-shadow: 0 20px 52px rgba(0,0,0,0.35), 0 0 0 1px rgba(59,130,246,0.45);  border-color: rgba(59,130,246,0.4); }
+    .fc-purple:hover { box-shadow: 0 20px 52px rgba(0,0,0,0.35), 0 0 0 1px rgba(139,92,246,0.45); border-color: rgba(139,92,246,0.4); }
+    .fc-green:hover  { box-shadow: 0 20px 52px rgba(0,0,0,0.35), 0 0 0 1px rgba(34,197,94,0.45);  border-color: rgba(34,197,94,0.4); }
+    .fc-orange:hover { box-shadow: 0 20px 52px rgba(0,0,0,0.35), 0 0 0 1px rgba(249,115,22,0.45); border-color: rgba(249,115,22,0.4); }
+
+    /* Gradient top "hero" area */
+    .fb-top {
+      position: relative;
+      padding: 36px 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      margin-bottom: 16px;
+      min-height: 148px;
+      overflow: hidden;
     }
-    .fi-blue   { background: rgba(59,130,246,0.15); }
-    .fi-purple { background: rgba(139,92,246,0.15); }
-    .fi-green  { background: rgba(34,197,94,0.15);  }
-    .fi-orange { background: rgba(249,115,22,0.15); }
+    .fc-blue .fb-top   { background: linear-gradient(140deg, #0d1526 0%, rgba(59,130,246,0.16) 100%); }
+    .fc-purple .fb-top { background: linear-gradient(140deg, #0d0e1f 0%, rgba(139,92,246,0.16) 100%); }
+    .fc-green .fb-top  { background: linear-gradient(140deg, #0a1610 0%, rgba(34,197,94,0.14) 100%); }
+    .fc-orange .fb-top { background: linear-gradient(140deg, #160f07 0%, rgba(249,115,22,0.14) 100%); }
 
-    .feature-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 8px;
+    /* Soft glow blob in the background */
+    .fb-top::after {
+      content: "";
+      position: absolute;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.28;
+      right: -24px; bottom: -50px;
+      pointer-events: none;
     }
-    .feature-desc {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.6;
+    .fc-blue .fb-top::after   { background: #3b82f6; }
+    .fc-purple .fb-top::after { background: #8b5cf6; }
+    .fc-green .fb-top::after  { background: #22c55e; }
+    .fc-orange .fb-top::after { background: #f97316; }
+
+    .fb-icon-wrap {
+      position: relative;
+      z-index: 1;
+      width: 72px; height: 72px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fc-blue .fb-icon-wrap   { background: rgba(59,130,246,0.18); box-shadow: 0 0 0 1px rgba(59,130,246,0.3), 0 8px 24px rgba(59,130,246,0.2); }
+    .fc-purple .fb-icon-wrap { background: rgba(139,92,246,0.18); box-shadow: 0 0 0 1px rgba(139,92,246,0.3), 0 8px 24px rgba(139,92,246,0.2); }
+    .fc-green .fb-icon-wrap  { background: rgba(34,197,94,0.15);  box-shadow: 0 0 0 1px rgba(34,197,94,0.3),  0 8px 24px rgba(34,197,94,0.15); }
+    .fc-orange .fb-icon-wrap { background: rgba(249,115,22,0.15); box-shadow: 0 0 0 1px rgba(249,115,22,0.3), 0 8px 24px rgba(249,115,22,0.15); }
+
+    .fb-icon-wrap svg { width: 32px; height: 32px; }
+    .fc-blue .fb-icon-wrap svg   { color: #60a5fa; }
+    .fc-purple .fb-icon-wrap svg { color: #a78bfa; }
+    .fc-green .fb-icon-wrap svg  { color: #4ade80; }
+    .fc-orange .fb-icon-wrap svg { color: #fb923c; }
+
+    /* Card body */
+    .fb-body {
+      padding: 20px 24px 22px;
+      background: var(--surface);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .fb-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 7px; }
+    .fb-desc  { font-size: 13.5px; color: var(--muted); line-height: 1.65; flex: 1; }
+
+    .fb-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 14px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      width: fit-content;
+    }
+    .fb-stat::before { content: ""; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .fc-blue .fb-stat   { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .fc-blue .fb-stat::before   { background: #60a5fa; }
+    .fc-purple .fb-stat { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .fc-purple .fb-stat::before { background: #a78bfa; }
+    .fc-green .fb-stat  { background: rgba(34,197,94,0.12);  color: #4ade80; }
+    .fc-green .fb-stat::before  { background: #4ade80; }
+    .fc-orange .fb-stat { background: rgba(249,115,22,0.12); color: #fb923c; }
+    .fc-orange .fb-stat::before { background: #fb923c; }
+
+    @media (max-width: 640px) {
+      .fb-row { flex-direction: column; }
+      .fb-lg  { flex: 1; }
     }
 
     /* ── How it works ───────────────────────────────────────────────────── */
@@ -574,6 +647,78 @@
     }
     .install-text { font-size: 14px; color: var(--muted); line-height: 1.5; }
     .install-text strong { color: var(--text); }
+
+    /* ── Gatekeeper callout ─────────────────────────────────────────────── */
+    .gatekeeper-callout {
+      display: none;
+      margin-top: 28px;
+      background: rgba(249,115,22,0.07);
+      border: 1px solid rgba(249,115,22,0.35);
+      border-radius: 14px;
+      padding: 22px 24px;
+      text-align: left;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .gatekeeper-callout.visible { display: block; }
+    .gk-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .gk-icon { font-size: 18px; line-height: 1.4; flex-shrink: 0; }
+    .gk-header strong { font-size: 14px; color: var(--text); line-height: 1.4; }
+    .gk-intro {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .gk-intro strong { color: var(--text); }
+    .gk-intro em { font-style: normal; color: rgba(249,115,22,0.9); }
+    .gk-intro u { text-decoration: none; color: #ef4444; font-weight: 600; }
+    .gk-steps { display: flex; flex-direction: column; gap: 0; }
+    .gk-step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(249,115,22,0.12);
+    }
+    .gk-step:last-child { border-bottom: none; }
+    .gk-n {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(249,115,22,0.18);
+      color: var(--orange);
+      font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .gk-text { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .gk-text strong { color: var(--text); }
+    .gk-quote {
+      display: inline-block;
+      margin: 6px 0;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border-left: 3px solid var(--orange);
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .gk-learn-more {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--orange);
+      opacity: 0.85;
+      cursor: pointer;
+    }
+    .gk-learn-more:hover { opacity: 1; text-decoration: underline; }
 
     /* ── Footer ─────────────────────────────────────────────────────────── */
     footer {
@@ -758,27 +903,83 @@
   <h2 class="section-title">Everything you'd expect.<br /><span class="grad-text">Nothing you don't.</span></h2>
   <p class="section-sub">Lightweight, event-driven, and privacy-focused. No background uploads. No telemetry. Just previews.</p>
 
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon fi-blue">👁️</div>
-      <div class="feature-title">Instant hover previews</div>
-      <p class="feature-desc">Preview panel appears the moment you hover a Dock icon — no clicking, no waiting. Driven by Accessibility events, not polling, so CPU usage is near zero at idle.</p>
+  <div class="features-bento">
+
+    <div class="fb-row">
+      <!-- Card 1 — wide -->
+      <div class="fb-card fb-lg fc-blue">
+        <div class="fb-top">
+          <div class="fb-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="12" rx="10" ry="6.5"/>
+              <circle cx="12" cy="12" r="3"/>
+              <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+        </div>
+        <div class="fb-body">
+          <div class="fb-title">Instant hover previews</div>
+          <p class="fb-desc">Preview panel appears the moment you hover a Dock icon — no clicking, no waiting. Driven by Accessibility events, not polling, so CPU usage is near zero at idle.</p>
+          <span class="fb-stat">~0ms latency · event-driven</span>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="fb-card fc-purple">
+        <div class="fb-top">
+          <div class="fb-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+          </div>
+        </div>
+        <div class="fb-body">
+          <div class="fb-title">Multi-window grid</div>
+          <p class="fb-desc">Apps with many windows auto-arrange into a balanced grid — up to 4 columns and 3 rows. Minimized windows are clearly badged.</p>
+          <span class="fb-stat">Up to 4 cols · 3 rows</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon fi-purple">⊞</div>
-      <div class="feature-title">Multi-window grid</div>
-      <p class="feature-desc">Apps with many open windows auto-arrange into a clean grid (up to 4 columns, 3 rows). Minimized windows are clearly badged.</p>
+
+    <div class="fb-row">
+      <!-- Card 3 -->
+      <div class="fb-card fc-green">
+        <div class="fb-top">
+          <div class="fb-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3l7.5 18 2.5-7.5L21 11 3 3z"/>
+              <path d="M13 13l5 5"/>
+            </svg>
+          </div>
+        </div>
+        <div class="fb-body">
+          <div class="fb-title">One-click switch</div>
+          <p class="fb-desc">Click any thumbnail to bring that exact window to front — including minimized or off-screen windows on other Spaces.</p>
+          <span class="fb-stat">Works across Spaces &amp; minimized</span>
+        </div>
+      </div>
+
+      <!-- Card 4 — wide -->
+      <div class="fb-card fb-lg fc-orange">
+        <div class="fb-top">
+          <div class="fb-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L4 6v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V6l-8-4z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+        </div>
+        <div class="fb-body">
+          <div class="fb-title">Private by design</div>
+          <p class="fb-desc">Thumbnail captures stay entirely on-device. No analytics, no network calls. The app lives in your menu bar and stays out of the way.</p>
+          <span class="fb-stat">0 bytes sent · no telemetry</span>
+        </div>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon fi-green">⚡</div>
-      <div class="feature-title">One-click switch</div>
-      <p class="feature-desc">Click any thumbnail to bring that exact window to front — including minimized or off-screen windows on other Spaces.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon fi-orange">🔒</div>
-      <div class="feature-title">Private by design</div>
-      <p class="feature-desc">Thumbnail captures stay entirely on-device. No analytics, no network calls. The app lives in your menu bar and stays out of the way.</p>
-    </div>
+
   </div>
 </div>
 
@@ -850,14 +1051,56 @@
     <p class="dl-sub">Free, forever. No account. No strings attached.</p>
 
     <div class="dl-btn-wrap">
-      <!-- UPDATE: replace href with your real GitHub release URL -->
-      <a href="https://github.com/developer-pritam/peek-dock/releases/latest/download/PeekDock-1.0.zip"
-         class="btn btn-primary">
+      <a href="https://github.com/developer-pritam/peek-dock/releases/latest/download/PeekDock.zip"
+         class="btn btn-primary" id="dl-btn">
         <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M10 14l-5-5h3V3h4v6h3l-5 5zm-7 2h14v2H3v-2z"/></svg>
-        Download PeekDock 1.0 (.zip)
+        Download PeekDock (.zip)
       </a>
     </div>
     <p class="dl-req">Requires macOS 14 Sonoma or later &nbsp;·&nbsp; Apple Silicon &amp; Intel</p>
+
+    <!-- Gatekeeper warning callout — shown after download click -->
+    <div class="gatekeeper-callout" id="gatekeeper-callout">
+      <div class="gk-header">
+        <span class="gk-icon">⚠️</span>
+        <strong>macOS will block the app on first launch — here's how to open it</strong>
+      </div>
+      <p class="gk-intro">
+        Because PeekDock isn't from the App Store, macOS shows a security dialog.
+        You'll see <em>"PeekDock.app Not Opened"</em> with <strong>Done</strong> and
+        <strong>Move to Bin</strong> buttons. <u>Do not click Move to Bin.</u>
+        Follow these steps instead:
+      </p>
+      <div class="gk-steps">
+        <div class="gk-step">
+          <div class="gk-n">1</div>
+          <div class="gk-text">
+            Click <strong>Done</strong> to dismiss the dialog.
+          </div>
+        </div>
+        <div class="gk-step">
+          <div class="gk-n">2</div>
+          <div class="gk-text">
+            Open <strong>System Settings</strong> → <strong>Privacy &amp; Security</strong>.
+          </div>
+        </div>
+        <div class="gk-step">
+          <div class="gk-n">3</div>
+          <div class="gk-text">
+            Scroll down to the <strong>Security</strong> section. You'll see:<br/>
+            <span class="gk-quote">"PeekDock was blocked from use because it is not from an identified developer."</span><br/>
+            Click <strong>Open Anyway</strong>.
+          </div>
+        </div>
+        <div class="gk-step">
+          <div class="gk-n">4</div>
+          <div class="gk-text">
+            Enter your <strong>password</strong> or use <strong>Touch ID</strong> to confirm.
+            PeekDock will launch. You only need to do this <strong>once</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="install-steps">
       <div class="install-step">
@@ -866,7 +1109,10 @@
       </div>
       <div class="install-step">
         <div class="install-n">2</div>
-        <div class="install-text"><strong>Right-click → Open</strong> on first launch to bypass the Gatekeeper warning (unsigned app). You only need to do this once.</div>
+        <div class="install-text">
+          Launch PeekDock. If macOS blocks it, go to <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.
+          <a href="#gatekeeper-callout" class="gk-learn-more" onclick="document.getElementById('gatekeeper-callout').classList.add('visible');return false;">See step-by-step guide ↑</a>
+        </div>
       </div>
       <div class="install-step">
         <div class="install-n">3</div>
@@ -903,6 +1149,22 @@
     </a>
   </div>
 </footer>
+
+<script>
+  // Show the Gatekeeper guide as soon as the user clicks Download
+  (function () {
+    var btn = document.getElementById('dl-btn');
+    var callout = document.getElementById('gatekeeper-callout');
+    if (!btn || !callout) return;
+    btn.addEventListener('click', function () {
+      callout.classList.add('visible');
+      // Smooth-scroll to the callout after a short delay so the page settles
+      setTimeout(function () {
+        callout.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    });
+  })();
+</script>
 
 </body>
 </html>

@@ -5,9 +5,13 @@ struct ThumbnailView: View {
     let onTap: () -> Void
 
     @State private var isHovered = false
+    @AppStorage("showMinimizedBadge") private var showMinimizedBadge = true
+    @AppStorage("thumbnailScale")     private var thumbnailScale: Double = 1.0
 
-    private let thumbnailWidth: CGFloat = 200
-    private let thumbnailHeight: CGFloat = 130
+    private let baseWidth:  CGFloat = 160
+    private let baseHeight: CGFloat = 105
+    private var thumbnailWidth:  CGFloat { baseWidth  * CGFloat(thumbnailScale) }
+    private var thumbnailHeight: CGFloat { baseHeight * CGFloat(thumbnailScale) }
 
     var body: some View {
         VStack(spacing: 4) {
@@ -36,7 +40,7 @@ struct ThumbnailView: View {
                 }
 
                 // ── Minimized badge ──
-                if window.isMinimized {
+                if window.isMinimized && showMinimizedBadge {
                     VStack {
                         Spacer()
                         HStack {

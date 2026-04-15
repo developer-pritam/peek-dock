@@ -130,6 +130,12 @@ step "Packaging"
 rm -f "$ZIP_PATH"
 ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
 
+# Also copy as PeekDock.zip (no version suffix) — this is what the website
+# download button links to via /releases/latest/download/PeekDock.zip so the
+# URL never needs updating when the version number changes.
+GENERIC_ZIP_PATH="$DIST_DIR/PeekDock.zip"
+cp "$ZIP_PATH" "$GENERIC_ZIP_PATH"
+
 ZIP_SIZE=$(du -sh "$ZIP_PATH" | cut -f1)
 ok "Zip created: $ZIP_SIZE"
 
@@ -185,9 +191,12 @@ if [[ "$PUBLISH" == true ]]; then
 Built with ♥ by [Pritam](https://developerpritam.in) · [Website](https://peekdock.developerpritam.in)"
 
     # Build the gh release command
+    # Upload both the versioned zip AND the generic PeekDock.zip so the
+    # website's /releases/latest/download/PeekDock.zip link always works.
     GH_FLAGS=(
         release create "$TAG"
         "$ZIP_PATH"
+        "$GENERIC_ZIP_PATH"
         --title "$RELEASE_TITLE"
         --notes "$RELEASE_NOTES"
     )

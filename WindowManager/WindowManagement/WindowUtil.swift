@@ -35,7 +35,7 @@ enum WindowUtil {
 
     static func getActiveWindows(of app: NSRunningApplication) async throws -> [WindowInfo] {
         let pid = app.processIdentifier
-        var sckWindowIDs = Set<CGWindowID>()
+        var liveWindowIDs = Set<CGWindowID>()
 
         // SCShareableContent auto-triggers Screen Recording permission dialog on first call.
         // Do NOT gate this on CGPreflightScreenCaptureAccess() — that returns false until
@@ -44,7 +44,7 @@ enum WindowUtil {
             let appWindows = content.windows.filter {
                 $0.owningApplication?.processID == pid && $0.windowLayer == 0
             }
-            sckWindowIDs = Set(appWindows.map(\.windowID))
+            liveWindowIDs = Set(appWindows.map(\.windowID))
 
             // Capture thumbnails concurrently (max 4 at a time)
             await withTaskGroup(of: Void.self) { group in
@@ -59,15 +59,34 @@ enum WindowUtil {
                     }
                     inFlight += 1
                 }
-                // Drain remaining tasks
                 for await _ in group {}
             }
         }
 
-        // Also discover windows via AX (minimized, hidden, other-space windows)
-        await discoverAXWindows(app: app, excludeWindowIDs: sckWindowIDs)
+        // Discover minimized / hidden / other-space windows via AX
+        let axIDs = await discoverAXWindows(app: app, excludeWindowIDs: liveWindowIDs)
+        liveWindowIDs.formUnion(axIDs)
 
-        return WindowCache.shared.read(pid: pid)
+        // ── Evict stale windows ───────────────────────────────────────────────
+        // Remove any cached entry whose window ID is no longer reported by either
+        // SCK or AX — those windows have been closed since the last fetch.
+        let evicted = WindowCache.shared.read(pid: pid).filter { liveWindowIDs.contains($0.id) }
+
+        // ── Deduplicate & filter phantom windows ──────────────────────────────
+        // Concurrent cache writes can rarely produce duplicate entries; a phantom
+        // AX window (zero frame, no image, no title) is also filtered here.
+        var seen = Set<CGWindowID>()
+        let fresh = evicted.filter { w in
+            guard seen.insert(w.id).inserted else { return false }   // deduplicate
+            // Drop windows that have no content at all (phantom AX entries)
+            let hasImage  = w.image != nil
+            let hasTitle  = !(w.windowName ?? "").isEmpty
+            let hasFrame  = w.frame.width > 20 && w.frame.height > 20
+            return hasImage || hasTitle || hasFrame
+        }
+        WindowCache.shared.write(pid: pid, windows: fresh)
+
+        return fresh
     }
 
     // MARK: - SCK Window Capture (per-window SCScreenshotManager)
@@ -151,11 +170,18 @@ enum WindowUtil {
 
     // MARK: - AX Window Discovery (minimized, hidden, other-space windows)
 
-    private static func discoverAXWindows(app: NSRunningApplication, excludeWindowIDs: Set<CGWindowID>) async {
+    private static func discoverAXWindows(app: NSRunningApplication, excludeWindowIDs: Set<CGWindowID>) async -> Set<CGWindowID> {
         let pid = app.processIdentifier
         let appAxElement = AXUIElementCreateApplication(pid)
         AXUIElementSetMessagingTimeout(appAxElement, 1.0)
         let axWindows = AXUIElement.allWindows(pid, appElement: appAxElement)
+
+        // Collect discovered IDs in an actor-isolated set to avoid data races
+        actor IDCollector {
+            var ids = Set<CGWindowID>()
+            func insert(_ id: CGWindowID) { ids.insert(id) }
+        }
+        let collector = IDCollector()
 
         await withTaskGroup(of: Void.self) { group in
             var inFlight = 0
@@ -166,6 +192,8 @@ enum WindowUtil {
 
                 if inFlight >= 4 { await group.next(); inFlight -= 1 }
                 group.addTask {
+                    await collector.insert(windowID)
+
                     let isMinimized = (try? axWin.isMinimized()) ?? false
                     let windowName = try? axWin.title()
                     let pos = try? axWin.position()
@@ -198,6 +226,8 @@ enum WindowUtil {
             }
             for await _ in group {}
         }
+
+        return await collector.ids
     }
 
     // MARK: - AX Window Matching

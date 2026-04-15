@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodegen generate:*)",
+      "Bash(xcodebuild -project PeekDock.xcodeproj -scheme PeekDock -configuration Debug build CODE_SIGN_IDENTITY=\"-\" CODE_SIGNING_REQUIRED=NO)"
+    ]
+  }
+}

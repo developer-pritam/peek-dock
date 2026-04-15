@@ -1,5 +1,6 @@
 import Cocoa
 import ScreenCaptureKit
+import ServiceManagement
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -10,6 +11,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+
+        // Kill any previously running instance of PeekDock so the new binary
+        // takes over cleanly. Must happen before any service setup.
+        terminatePreviousInstances()
+
+        // Re-register SMAppService if the user had Launch at Login enabled.
+        // When the app binary is replaced the registration can become stale;
+        // unregister + re-register silently refreshes it.
+        refreshLoginItemIfNeeded()
 
         checkPermissions()
         setupStatusBar()
@@ -22,6 +32,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .peekDockStatusBarVisibilityChanged,
             object: nil
         )
+    }
+
+    // MARK: - Single-instance enforcement
+
+    private func terminatePreviousInstances() {
+        guard let bundleID = Bundle.main.bundleIdentifier else { return }
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+            .filter { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }
+        for app in others {
+            app.terminate()
+        }
+    }
+
+    // MARK: - Login item refresh
+
+    private func refreshLoginItemIfNeeded() {
+        guard #available(macOS 13, *) else { return }
+        // Only touch the registration when it is currently enabled; this
+        // re-points the login item to the new binary path automatically.
+        if SMAppService.mainApp.status == .enabled {
+            try? SMAppService.mainApp.unregister()
+            try? SMAppService.mainApp.register()
+        }
     }
 
     // MARK: - Permissions
